@@ -796,13 +796,35 @@ var Utilities_Item = {
 
 		var fieldID, itemFieldID;
 		for(var field in item) {
-			if(field === "complete" || field === "itemID" || field === "attachments"
-				|| field === "seeAlso") continue;
+			if(field === "complete" || field === "itemID" || field === "seeAlso") continue;
 
 			var val = item[field];
 
 			if(field === "itemType") {
 				newItem[field] = val;
+			} else if(field === "attachments") {
+				console.log('ATTACHMENTS', val	)
+				var n = val.length;
+				for(var j=0; j<n; j++) {
+					var attachment = val[j];
+					if(typeof attachment !== "object" || !attachment.url) {
+						Zotero.debug("itemToAPIJSON: Discarded attachment: not an URL");
+						continue;
+					}
+					if(attachment.mimeType.toString() !== "application/pdf") {
+						Zotero.debug("itemToAPIJSON: Discarded attachment: not an PDF");
+						continue;
+					}
+					if(attachment.mimeType.toString() === "application/pdf") {
+						newItem['pdf'] = {
+							itemType:   "attachment",
+							parentItem: newItem.key,
+							title:      attachment.title.toString(),
+							mimeType:   attachment.mimeType.toString(),
+							url:        attachment.url.toString(),
+						}
+					}
+				}
 			} else if(field === "creators") {
 				// normalize creators
 				var n = val.length;
